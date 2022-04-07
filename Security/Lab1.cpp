@@ -27,9 +27,9 @@ namespace
 
 void printOutLogicalDrives(LPWSTR lpBuffer)
 {
-	cout << "Available devices in the system: " << endl << endl;
-	for (int i = 0; i < 16; i++) cout << (char)lpBuffer[i];
-	cout << endl;
+	std::cout << "Available devices in the system: " << std::endl << std::endl;
+	for (int i = 0; i < 16; i++) std::cout << (char)lpBuffer[i];
+	std::cout <<std::endl;
 }
 void getInfoAboutDevice(LPCSTR deviceName) 
 {
@@ -50,10 +50,10 @@ void getInfoAboutDevice(LPCSTR deviceName)
 
 	if (informationExist)
 	{
-		cout << "Serial number: " << volumeSerialNumber << endl;
-		cout << "File system: " << fileSystemNameBuffer << endl;
+		std::cout << "Serial number: " << volumeSerialNumber <<std::endl;
+		std::cout << "File system: " << fileSystemNameBuffer <<std::endl;
 	}
-	else cout << "Device not found." << endl;
+	else std::cout << "Device not found." <<std::endl;
 }
 void getInforAboutDevicesSpace(LPCSTR directoryName)
 {
@@ -69,12 +69,12 @@ void getInforAboutDevicesSpace(LPCSTR directoryName)
 
 	if (haveSizeInformation)
 	{
-		cout << "Total storage capacity = " << GB(totalNumberOfBytes) << "  GB" << endl;
-		cout << "Free space = " << GB(totalNumberOfFreeBytes) << "  GB" << endl;
+		std::cout << "Total storage capacity = " << GB(totalNumberOfBytes) << "  GB" <<std::endl;
+		std::cout << "Free space = " << GB(totalNumberOfFreeBytes) << "  GB" <<std::endl;
 	}
 	else 
 	{
-		cout << "No data." << endl;
+		std::cout << "No data." <<std::endl;
 	}
 }
 string getDeviceType(LPCTSTR driveName) 
@@ -107,11 +107,11 @@ void ejectDrive(string name_s)
 	bool ejactSucceeded = DeviceIoControl(hVol, IOCTL_STORAGE_EJECT_MEDIA, 0, 0, 0, 0, &dwRet, 0);
 	if (ejactSucceeded) 
 	{
-		cout << "Device successfully removed." << endl;
+		std::cout << "Device successfully removed." <<std::endl;
 	}
 	else 
 	{
-		cout << "The device has not been ejected." << endl;
+		std::cout << "The device has not been ejected." <<std::endl;
 	}
 
 	CloseHandle(hVol);
@@ -124,11 +124,11 @@ int ToInt(MenuItem item)
 void PrintMenu()
 {
 	system("cls");
-	cout << ToInt(MenuItem::DEVICE_LIST) << ". List all devices." << endl;
-	cout << ToInt(MenuItem::DEVICE_TYPES) << ". Find out device type." << endl;
-	cout << ToInt(MenuItem::DEVICE_INFO) << ". View device information." << endl;
-	cout << ToInt(MenuItem::DEVICE_REMOVE) << ". Remove device." << endl;
-	cout << ToInt(MenuItem::EXIT) << ". Exit." << endl;
+	std::cout << ToInt(MenuItem::DEVICE_LIST) << ". List all devices." <<std::endl;
+	std::cout << ToInt(MenuItem::DEVICE_TYPES) << ". Find out device type." <<std::endl;
+	std::cout << ToInt(MenuItem::DEVICE_INFO) << ". View device information." <<std::endl;
+	std::cout << ToInt(MenuItem::DEVICE_REMOVE) << ". Remove device." <<std::endl;
+	std::cout << ToInt(MenuItem::EXIT) << ". Exit." <<std::endl;
 }
 void PrintDeviceList()
 {
@@ -149,14 +149,14 @@ void PrintDeviceList()
 void PrintDeviceType()
 {
 	wstring deviceName;
-	cout << "Select device name to view device type: " << endl;
+	std::cout << "Select device name to view device type: " <<std::endl;
 	wcin >> deviceName;
-	cout << getDeviceType(deviceName.c_str()) << endl;
+	std::cout << getDeviceType(deviceName.c_str()) <<std::endl;
 }
 void PrintDeviceInfo()
 {
 	string deviceName;
-	cout << "Enter device name to view information: ";
+	std::cout << "Enter device name to view information: ";
 	cin >> deviceName;
 	getInfoAboutDevice(deviceName.c_str());
 	getInforAboutDevicesSpace(deviceName.c_str());
@@ -164,7 +164,7 @@ void PrintDeviceInfo()
 void TryEnjectDevice()
 {
 	string deviceName;
-	cout << "Enter device name to retrieve: ";
+	std::cout << "Enter device name to retrieve: ";
 	cin >> deviceName;
 	ejectDrive(deviceName);
 }
