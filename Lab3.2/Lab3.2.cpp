@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string>
 #include <Windows.h>
-#include <Shellapi.h>
+#include <process.h> 
 
 void Info()
 {
@@ -17,9 +17,9 @@ void Info()
 	system("PAUSE");
 }
 
-void ArgumentsCountCheck(int argc)
+void ArgumentsCountCheck(int argc, const char* argv[])
 {
-	if (argc < 3)
+	if (argc < 2)
 	{
 		std::cout << "Usage: Lab3.2.exe <file to execute> <?> <ShowCmd int> <params>" << std::endl
 			<< "\t<file to execute> - path to file." << std::endl
@@ -28,6 +28,10 @@ void ArgumentsCountCheck(int argc)
 			<< "\t<params> - params to file execute." << std::endl;
 		throw std::invalid_argument("invalid count arguments.");
 	}
+	else if (argc > 2)
+	{
+		if (argv[2] == std::string("?")) Info();
+	}
 }
 
 int main(int argc, const char* argv[])
@@ -35,13 +39,13 @@ int main(int argc, const char* argv[])
 	SetConsoleCP(1251);
 	SetConsoleOutputCP(1251);
 
+	std::cout << "Привет, я 3.2" << std::endl;
+
 	try
 	{
-		ArgumentsCountCheck(argc);
+		ArgumentsCountCheck(argc, argv);
 
-		int ShowCmd = 9;
-
-		if (argv[2] == std::string("?")) Info();
+		int ShowCmd = 1;
 
 		std::string params;
 		for (size_t i = 0; i < argc - 1; i++)
@@ -55,7 +59,8 @@ int main(int argc, const char* argv[])
 			params.append(argv[i + 1]).append(" ");
 		}
 
-		ShellExecute(NULL, "open", argv[1], ((params.size() == 1) ? NULL : params.c_str()), NULL, ShowCmd);
+		ShellExecute(0, "open", argv[1], ((params.size() == 1) ? NULL : params.c_str()), NULL, SW_SHOWNORMAL);
+		system("pause");
 	}
 	catch (const std::exception& err)
 	{

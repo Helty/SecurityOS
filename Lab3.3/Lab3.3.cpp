@@ -5,12 +5,12 @@
 
 void ArgumentsCountCheck(int argc)
 {
-	if (argc < 3)
+	if (argc < 2)
 	{
 		std::cout << "Usage: Lab3.3.exe <file to execute> <?> <params>" << std::endl
 			<< "\t<file to execute> - path to file." << std::endl
 			<< "\t<?> - optional parameter to display information." << std::endl
-			<< "\t<params> - params to file execute." << std::endl;
+			<< "\t<params> - optional params to file execute." << std::endl;
 		throw std::invalid_argument("invalid count arguments.");
 	}
 }
@@ -33,6 +33,8 @@ int main(int argc, const char* argv[])
 	SetConsoleCP(1251);
 	SetConsoleOutputCP(1251);
 
+	std::cout << "Привет, я 3.3" << std::endl;
+
 	try
 	{
 		ArgumentsCountCheck(argc);
@@ -47,6 +49,7 @@ int main(int argc, const char* argv[])
 		LPSTR arguments = const_cast<char*>(argumentsS.c_str());
 
 		CreateProcessA(argv[1], arguments, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &cif, &pi);
+		system("pause");
 	}
 	catch (const std::exception& err)
 	{

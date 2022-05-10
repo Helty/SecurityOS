@@ -31,6 +31,8 @@ int main(int argc, const char* argv[], char** envp)
 	SetConsoleCP(1251);
 	SetConsoleOutputCP(1251);
 
+	std::cout << "Привет, я 3.1" << std::endl;
+
 	ArgumentsCountCheck(argc);
 
 	if ((argc == 3) and (argv[2] == std::string("?"))) Info();
@@ -46,4 +48,6 @@ int main(int argc, const char* argv[], char** envp)
 	cstrings.push_back(NULL);
 
 	execve(argv[1], cstrings.data(), envp);
+
+	system("pause");
 }
