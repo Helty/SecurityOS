@@ -6,7 +6,7 @@
 
 namespace
 {
-	HANDLE hEvent1;
+	HANDLE hEvent;
 	CRITICAL_SECTION cs;
 
 	void Info()
@@ -19,14 +19,15 @@ namespace
 	}
 }
 
-DWORD WINAPI fun_thread(LPVOID n) 
+DWORD WINAPI threadFun(LPVOID n) 
 {
 	EnterCriticalSection(&cs);
+
 	srand(static_cast<unsigned>(time(NULL)));
 
 	while (true)
 	{
-		if (WaitForSingleObject(hEvent1, 0) == WAIT_OBJECT_0) 
+		if (WaitForSingleObject(hEvent, 0) == WAIT_OBJECT_0) 
 		{
 			std::cout << std::endl << "Поток " << n << " завершил работу!";
 			ExitThread(0);
@@ -49,8 +50,7 @@ int main(int argc, char* argv[])
 
 	if (argc > 1 and argv[1] == "/?") Info();
 
-	HANDLE const hMutex = CreateMutexW(NULL, FALSE, L"lab5");
-
+	CreateMutexW(NULL, FALSE, L"lab5");
 	if (GetLastError() == ERROR_ALREADY_EXISTS) 
 	{
 		std::cout << "Программа уже запущена." << std::endl;
@@ -58,26 +58,19 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	HANDLE hEvent1 = CreateEventA(NULL, TRUE, FALSE, NULL);
+	hEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
 
-	int countThread = 2;
+	size_t countThread = (argc > 1 and argv[1] != "/?") ? atoi(argv[1]) : 2;
 
-	if (argc > 1 and argv[1] != "/?") countThread = atoi(argv[1]);
-
-	for (size_t i = 1; i <= countThread; i++)
+	for (size_t threadIndex = 1; threadIndex <= countThread; threadIndex++)
 	{
-		HANDLE thread1 = CreateThread(NULL, 0, fun_thread, LPVOID(i), 0, NULL);
+		CreateThread(NULL, 0, threadFun, LPVOID(threadIndex), 0, NULL);
 	}
 
-	while (true) 
-	{
-		if (_getch() == 27) 
-		{
-			SetEvent(hEvent1);
-			Sleep(2000);
-			break;
-		}
-	}
+	while (_getch() != 27) continue;
+	
+	SetEvent(hEvent);
+	Sleep(2000);
 
 	return 0;
 }

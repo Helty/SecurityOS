@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_map>
 #include <Windows.h>
+#include <locale>
 
 namespace
 {
@@ -32,7 +33,7 @@ namespace
 		{SERVICE::DRIVER, "Получен список драйверов: "}
 	};
 
-	SC_HANDLE schSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
+	SC_HANDLE schSCManager = OpenSCManagerA(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
 
 	ENUM_SERVICE_STATUS serviceStatus[SIZE];
 	ENUM_SERVICE_STATUS_PROCESS serviceStatusProcess[SIZE];
@@ -52,12 +53,12 @@ void PrintArguments(int argc, char* argv[])
 void Info()
 {
 	std::cout << "Лабораторная работа #4." << std::endl
-			    << "Работу выполнил студент группы БИ-31 Шестаков Андрей." << std::endl
-				<< "Аргументы программы:" << std::endl 
-				<< "/? - о программе" << std::endl 
-			    << "/d - вывод списка драйверов" << std::endl 
-			    << "/i \"имя_службы\"- вывод данных о службе" << std::endl;
-	
+		<< "Работу выполнил студент группы БИ-31 Шестаков Андрей." << std::endl
+		<< "Аргументы программы:" << std::endl
+		<< "/? - о программе" << std::endl
+		<< "/d - вывод списка драйверов" << std::endl
+		<< "/i \"имя_службы\"- вывод данных о службе" << std::endl;
+
 }
 
 void PrintServicesOrDrivers(SERVICE service)
@@ -66,56 +67,13 @@ void PrintServicesOrDrivers(SERVICE service)
 
 	for (size_t i = 0; i < returned; i++)
 	{
-		std::wcout << std::setw(40) << std::left << serviceStatus[i].lpServiceName;
-		std::cout << ' ' << std::setw(40) << std::left << serviceStatusInfos[serviceStatus[i].ServiceStatus.dwCurrentState];
-		std::wcout << ' ' << serviceStatus[i].lpDisplayName << std::endl;
+		std::cout << serviceStatus[i].lpServiceName << " - ";
+		std::cout << serviceStatus[i].lpDisplayName << " - ";
+		std::cout << serviceStatusInfos[serviceStatus[i].ServiceStatus.dwCurrentState] << std::endl;
 	}
 }
 
-void StartServicesStatus(SERVICE service)
-{
-	EnumServicesStatus(
-		schSCManager,
-		(service == SERVICE::DRIVER) ? SERVICE_DRIVER : SERVICE_WIN32,
-		SERVICE_STATE_ALL,
-		(LPENUM_SERVICE_STATUSW)&serviceStatus,
-		sizeStatus,
-		&needed,
-		&returned,
-		&handle
-	);
-}
-
-int IsServiceNameExistens(std::string serviceName, bool& isServiceNameExist)
-{
-	std::wstring serviceNameW = std::wstring(serviceName.begin(), serviceName.end());
-
-	EnumServicesStatusEx(
-		schSCManager,
-		SC_ENUM_PROCESS_INFO,
-		SERVICE_WIN32 | SERVICE_DRIVER,
-		SERVICE_STATE_ALL,
-		(LPBYTE)serviceStatusProcess,
-		sizeStatus,
-		&needed,
-		&returned,
-		&handle,
-		NULL
-	);
-
-	for (int index = 0; index < static_cast<int>(returned); index++)
-	{
-		if (serviceStatusProcess[index].lpServiceName == serviceNameW)
-		{
-			isServiceNameExist = true;
-			return index;
-		}
-	}
-
-	return -1;
-}
-
-bool PrintInfoAboutService(int indexService)
+bool PrintInfoAboutServiceByIndex(int indexService)
 {
 	if (indexService == -1) return false;
 
@@ -135,9 +93,54 @@ bool PrintInfoAboutService(int indexService)
 		std::cout << "The service shares a process with other services." << std::endl;
 
 	std::cout << std::setw(25) << std::left << "Статус службы:" << serviceStatusInfos[serviceStatusProcess[indexService].ServiceStatusProcess.dwCurrentState] << std::endl;
-	std::cout << std::setw(25) << std::left << "Идентификатор процесса:" << serviceStatusProcess[indexService].ServiceStatusProcess.dwProcessId << std::endl;
+	std::wcout << std::setw(25) << std::left << "Идентификатор процесса:" << serviceStatusProcess[indexService].ServiceStatusProcess.dwProcessId << std::endl;
 
 	return true;
+}
+
+void StartServicesStatus(SERVICE service)
+{
+	if (!EnumServicesStatusA(
+		schSCManager,
+		(service == SERVICE::DRIVER) ? SERVICE_DRIVER : SERVICE_WIN32,
+		SERVICE_STATE_ALL,
+		serviceStatus,
+		sizeStatus,
+		&needed,
+		&returned,
+		&handle
+	))
+	{
+		throw std::exception("Ошибка получения списка сервисов.");
+	}
+}
+
+int GetIndexServiceNameIfExistens(std::string serviceName)
+{
+	std::wstring serviceNameW = std::wstring(serviceName.begin(), serviceName.end());
+
+	if (!EnumServicesStatusExA(
+		schSCManager,
+		SC_ENUM_PROCESS_INFO,
+		SERVICE_WIN32 | SERVICE_DRIVER,
+		SERVICE_STATE_ALL,
+		(LPBYTE)serviceStatusProcess,
+		sizeStatus,
+		&needed,
+		&returned,
+		&handle,
+		NULL
+	))
+	{
+		throw std::exception("Ошибка получения списка сервисов.");
+	}
+
+	for (int index = 0; index < static_cast<int>(returned); index++)
+	{
+		if (serviceStatusProcess[index].lpServiceName == serviceName) return index;
+	}
+
+	return -1;
 }
 
 int main(int argc, char* argv[])
@@ -145,32 +148,21 @@ int main(int argc, char* argv[])
 	SetConsoleCP(1251);
 	SetConsoleOutputCP(1251);
 
-	{
-		PrintArguments(argc, argv);
-	}
+	PrintArguments(argc, argv);
+	
+	SERVICE serviceParam = (argv[1] == "/d") ? SERVICE::DRIVER : SERVICE::WIN_32;
+	StartServicesStatus(serviceParam);
+	PrintServicesOrDrivers(serviceParam);
 
+	if (argv[1] == "/?") Info();
+	
+	if (argv[1] == "/i")
 	{
-		SERVICE serviceParam = (argv[1] == "/d") ? SERVICE::DRIVER : SERVICE::WIN_32;
-		StartServicesStatus(serviceParam);
-		PrintServicesOrDrivers(serviceParam);
-		return 0;
-	}
-
-	{
-		if (argv[1] == "/?") Info();
-	}
-
-	{
-		if (argv[1] == "/i")
+		if (!PrintInfoAboutServiceByIndex(GetIndexServiceNameIfExistens(argv[2])))
 		{
-			bool isServiceNameExist;
-			int indexService = IsServiceNameExistens(argv[2], isServiceNameExist);
-
-			if (!PrintInfoAboutService(indexService))
-			{
-				std::cout << "Служба " << argv[2] << " не найдена." << std::endl;
-			}
+			std::cout << "Служба " << argv[2] << " не найдена." << std::endl;
 		}
 	}
+	
 	return 0;
 }
